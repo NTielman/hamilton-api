@@ -4,6 +4,7 @@ Install peewee orm, fastapi and uvicorn ✅
 Create database table models ✅
 Connect orm to database 
 Using the orm write service functions to query (GET, POST, PUT, DELETE) databasae entries with ✅
+insert placeholder data into db, test if service queries work ✅
 create a fastapi application with endpoints to GET info from the database using the (public) service functions
 Insert musical data (from wikipedia/google) into database tables
 Run application with and test endpoints. (Write valid/invalid tests with pytest)
