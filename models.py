@@ -40,7 +40,9 @@ class Song(BaseModel):
     duration_in_seconds = IntegerField(constraints=[Check("duration_in_seconds > 0")])
     singers = ManyToManyField(Role, backref="songs", on_delete="CASCADE")
 
+
 SongRoles = Song.singers.get_through_model()
+
 
 class Musical_info(BaseModel):
     title = CharField()
