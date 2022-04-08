@@ -2,10 +2,11 @@ Make a database schema containing the following info: general info, cast, musica
 Create a virtual environment, activate it ✅
 Install peewee orm, fastapi and uvicorn ✅
 Create database table models ✅
-Connect orm to database 
 Using the orm write service functions to query (GET, POST, PUT, DELETE) databasae entries with ✅
 insert placeholder data into db, test if service queries work ✅
-create a fastapi application with endpoints to GET info from the database using the (public) service functions
+create a fastapi application with endpoints to GET info from the database using the service functions ✅
+Add option to limit query results
+Modify Role Model to account for multiple cast members
 Insert musical data (from wikipedia/google) into database tables
 Run application with and test endpoints. (Write valid/invalid tests with pytest)
 Look into options to host api online (optional)
