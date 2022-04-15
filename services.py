@@ -19,9 +19,13 @@ def add_cast(
         return False
 
 
-def get_cast() -> list:
+def get_cast(limit: int) -> list:
     """returns all castmembers"""
-    query = Cast.select()
+    if limit:
+        query = Cast.select().limit(limit)
+    else:
+        query = Cast.select()
+
     cast_members = [model_to_dict(cast_member) for cast_member in query]
     return cast_members
 
@@ -35,9 +39,13 @@ def get_cast_by_id(cast_id: int) -> Union[dict, bool]:
         return False
 
 
-def get_cast_by_name(cast_name: str) -> list:
+def get_cast_by_name(cast_name: str, limit: int) -> list:
     """returns castmember(s) matching name"""
-    query = Cast.select().where(Cast.full_name ** f"%{cast_name}%")
+    if limit:
+        query = Cast.select().where(Cast.full_name ** f"%{cast_name}%").limit(limit)
+    else:
+        query = Cast.select().where(Cast.full_name ** f"%{cast_name}%")
+
     cast_members = [model_to_dict(cast_member) for cast_member in query]
     return cast_members
 
@@ -51,11 +59,11 @@ def get_cast_by_role(role_id: int) -> Union[dict, bool]:
         return False
 
 
-def get_random_cast() -> dict:
+def get_random_cast(limit: int) -> list:
     """returns a random castmember"""
-    cast_member = Cast.select().order_by(fn.Random()).limit(1)
+    cast_member = Cast.select().order_by(fn.Random()).limit(limit)
     rand_member = [model_to_dict(member) for member in cast_member]
-    return rand_member[0]
+    return rand_member
 
 
 ################# Role queries #################
@@ -77,9 +85,13 @@ def add_role(
         return False
 
 
-def get_roles() -> list:
+def get_roles(limit: int) -> list:
     """returns all roles"""
-    query = Role.select()
+    if limit:
+        query = Role.select().limit(limit)
+    else:
+        query = Role.select()
+
     roles = [model_to_dict(role) for role in query]
     return roles
 
@@ -93,9 +105,13 @@ def get_role_by_id(role_id: int) -> Union[dict, bool]:
         return False
 
 
-def get_roles_by_name(role_name: str) -> list:
+def get_roles_by_name(role_name: str, limit: int) -> list:
     """returns role(s) matching name"""
-    query = Role.select().where(Role.full_name ** f"%{role_name}%")
+    if limit:
+        query = Role.select().where(Role.full_name ** f"%{role_name}%").limit(limit)
+    else:
+        query = Role.select().where(Role.full_name ** f"%{role_name}%")
+
     roles = [model_to_dict(role) for role in query]
     return roles
 
@@ -107,18 +123,22 @@ def get_roles_by_cast(cast_id: int) -> list:
     return roles
 
 
-def get_roles_by_song(song_id: int) -> list:
+def get_roles_by_song(song_id: int, limit: int) -> list:
     """returns role(s) by song"""
-    query = Song.get_by_id(song_id).singers
+    if limit:
+        query = query = Song.get_by_id(song_id).singers.limit(limit)
+    else:
+        query = Song.get_by_id(song_id).singers
+
     roles = [model_to_dict(role) for role in query]
     return roles
 
 
-def get_random_role() -> dict:
+def get_random_role(limit: int) -> list:
     """returns a random role"""
-    role = Role.select().order_by(fn.Random()).limit(1)
-    rand_role = [model_to_dict(x) for x in role]
-    return rand_role[0]
+    role = Role.select().order_by(fn.Random()).limit(limit)
+    rand_roles = [model_to_dict(x) for x in role]
+    return rand_roles
 
 
 ################# Song queries #################
@@ -141,9 +161,13 @@ def add_song(
         return False
 
 
-def get_songs() -> list:
+def get_songs(limit: int) -> list:
     """returns all songs"""
-    query = Song.select()
+    if limit:
+        query = Song.select().limit(limit)
+    else:
+        query = Song.select()
+
     songs = [model_to_dict(song) for song in query]
     return songs
 
@@ -157,25 +181,32 @@ def get_song_by_id(song_id: int) -> Union[dict, bool]:
         return False
 
 
-def get_songs_by_title(song_title: str) -> list:
+def get_songs_by_title(song_title: str, limit: int) -> list:
     """returns songs(s) matching title"""
-    query = Song.select().where(Song.title ** f"%{song_title}%")
+    if limit:
+        query = Song.select().where(Song.title ** f"%{song_title}%").limit(limit)
+    else:
+        query = Song.select().where(Song.title ** f"%{song_title}%")
     songs = [model_to_dict(song) for song in query]
     return songs
 
 
-def get_songs_by_role(role_id: int) -> list:
+def get_songs_by_role(role_id: int, limit: int) -> list:
     """returns song(s) by role"""
-    query = Role.get_by_id(role_id).songs
+    if limit:
+        query = Role.get_by_id(role_id).songs.limit(limit)
+    else:
+        query = Role.get_by_id(role_id).songs
+
     songs = [model_to_dict(song) for song in query]
     return songs
 
 
-def get_random_song() -> dict:
+def get_random_song(limit: int) -> list:
     """returns a random song"""
-    song = Song.select().order_by(fn.Random()).limit(1)
-    rand_song = [model_to_dict(x) for x in song]
-    return rand_song[0]
+    song = Song.select().order_by(fn.Random()).limit(limit)
+    rand_songs = [model_to_dict(x) for x in song]
+    return rand_songs
 
 
 ################# Musical query #################
