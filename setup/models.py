@@ -18,27 +18,38 @@ class BaseModel(Model):
 class Cast(BaseModel):
     cast_id = AutoField()
     full_name = CharField()
-    birth_date = DateField()
+    birth_date = DateField(null=True)
     bio = TextField(null=True)
     photo_url = CharField(null=True)
+
+
+class Act(BaseModel):
+    act_number = IntegerField(primary_key=True)
+    plot = TextField()
 
 
 class Role(BaseModel):
     role_id = AutoField()
     full_name = CharField()
-    birth_date = DateField()
+    gender = TextField(choices=["M", "F"])
+    birth_date = DateField(null=True)
+    part_size = TextField(choices=["Lead", "Supporting"])
     bio = TextField(null=True)
     photo_url = CharField(null=True)
+    acts = ManyToManyField(Act, backref="roles")
     cast_member = ForeignKeyField(Cast, backref="roles", on_delete="CASCADE")
-    # historical background?
+
+
+ActRoles = Role.acts.get_through_model()
 
 
 class Song(BaseModel):
     song_id = AutoField()
     title = CharField()
     lyrics = TextField()
-    duration_in_seconds = IntegerField(constraints=[Check("duration_in_seconds > 0")])
+    duration = TimeField()
     singers = ManyToManyField(Role, backref="songs", on_delete="CASCADE")
+    act = ForeignKeyField(Act, backref="songs")
 
 
 SongRoles = Song.singers.get_through_model()
@@ -47,10 +58,12 @@ SongRoles = Song.singers.get_through_model()
 class Musical_info(BaseModel):
     title = CharField()
     synopsis = TextField()
+    category = TextField()
     release_year = DateField()
+    genre = TextField()
     poster_url = CharField(null=True)
 
 
 def create_tables():
     with db:
-        db.create_tables([Cast, Role, Song, SongRoles, Musical_info])
+        db.create_tables([Cast, Act, Role, Song, ActRoles, SongRoles, Musical_info])

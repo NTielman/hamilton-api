@@ -1,22 +1,71 @@
-import services
+import setup.services as services
 import uvicorn
-import database
 from fastapi import FastAPI, Path, HTTPException, Query
+from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional
 
 
-# database.add_db_data()  # comment out this line after db initialised
+description = """
+The Hamilton Musical API for all your Hamilton fan needs. Contains information on the cast, musical tracks and roles. 🎭
+
+## General
+
+**read** general information about the musical
+
+## Cast
+
+**search and read** cast info
+
+## Acts
+
+**search and read** synopsis of acts
+
+## Roles / Parts
+
+**search and read** about the different roles
+
+## Songs / Tracks
+
+**search and read** about the different tracks the musical is comprised of
+
+"""
+
+tags_metadata = [
+    {
+        "name": "general",
+        "description": "General information on the Hamilton musical",
+    },
+    {
+        "name": "cast",
+        "description": "Information on the cast members, actors and crew who worked in or on the Hamilton musical",
+    },
+    {
+        "name": "acts",
+        "description": "Information on the acts: synopsis, roles and songs that take place in each",
+    },
+    {
+        "name": "roles",
+        "description": "Description of the different characters, roles and parts that appear in the Hamilton musical",
+    },
+    {
+        "name": "songs",
+        "description": "Information on the different tracks the Hamilton musical is comprised of",
+    },
+]
+
 app = FastAPI(
     title="Hamilton API",
-    description=database.description,
+    description=description,
     version="0.0.1",
     contact={
         "name": "Nneka Tielman",
         "url": "https://ntielman.github.io/Portfolio/#contact",
         "email": "khalienne@gmail.com",
     },
-    openapi_tags=database.tags_metadata,
+    openapi_tags=tags_metadata,
 )
+
+app.add_middleware(CORSMiddleware, allow_origins=["*"])
 
 ################ GENERAL INFO ################
 @app.get("/", tags=["general"])
@@ -59,7 +108,7 @@ def get_cast_members_by_name(
     cast_name: str = Path(
         ...,
         title="Cast Name",
-        description="The first/full/last name of the cast member to get (case insensitive)",
+        description="The first/full/last name of the cast member to get (case insensitive), use ASCII encoding for special characters",
     ),
     n: Optional[int] = Query(
         None, title="limit by n", description="Limit number of results to n results"
@@ -99,6 +148,31 @@ def get_random_cast_members(
     return {"Data": cast_members}
 
 
+################# ACT INFO ################
+@app.get("/acts", tags=["acts"])
+def get_all_acts(
+    n: Optional[int] = Query(
+        None, title="limit by n", description="Limit number of results to n results"
+    )
+):
+    all_acts = services.get_acts(n)
+    if not all_acts:
+        raise HTTPException(status_code=404, detail="Acts not found")
+    return {"Data": all_acts}
+
+
+@app.get("/acts/no/{act_num}", tags=["acts"])
+def get_act_by_number(
+    act_num: int = Path(
+        ..., title="Act no.", description="The number of the act to get"
+    )
+):
+    act_by_num = services.get_act_by_id(act_num)
+    if not act_by_num:
+        raise HTTPException(status_code=404, detail=f"Act number '{act_num}' not found")
+    return {"Data": act_by_num}
+
+
 ################# ROLES INFO ################
 @app.get("/roles", tags=["roles"])
 def get_all_roles(
@@ -131,7 +205,7 @@ def get_roles_by_name(
     role_name: str = Path(
         ...,
         title="Role Name",
-        description="The first/full/last name of the role/part to get (case insensitive)",
+        description="The first/full/last name of the role/part to get (case insensitive), use ASCII encoding for special characters",
     ),
     n: Optional[int] = Query(
         None, title="limit by n", description="Limit number of results to n results"
@@ -172,6 +246,40 @@ def get_roles_by_song(
     if not role:
         raise HTTPException(
             status_code=404, detail=f"Roles with Song id '{song_id}' not found"
+        )
+    return {"Data": role}
+
+
+@app.get("/roles/act/{act_num}", tags=["roles"])
+def get_roles_by_act(
+    act_num: int = Path(
+        ..., title="Act num", description="The number of the act to get"
+    ),
+    n: Optional[int] = Query(
+        None, title="limit by n", description="Limit number of results to n results"
+    ),
+):
+    role = services.get_roles_by_act(act_num, n)
+    if not role:
+        raise HTTPException(
+            status_code=404, detail=f"Roles with act no: '{act_num}' not found"
+        )
+    return {"Data": role}
+
+
+@app.get("/roles/gender/{gender}", tags=["roles"])
+def get_roles_by_gender(
+    gender: str = Path(
+        ..., title="Gender", description="The gender of the roles to get"
+    ),
+    n: Optional[int] = Query(
+        None, title="limit by n", description="Limit number of results to n results"
+    ),
+):
+    role = services.get_roles_by_gender(gender, n)
+    if not role:
+        raise HTTPException(
+            status_code=404, detail=f"No roles with gender '{gender}' found"
         )
     return {"Data": role}
 
@@ -220,7 +328,7 @@ def get_songs_by_title(
     song_title: str = Path(
         ...,
         title="Song Title",
-        description="The title of the song/track to get (case insensitive)",
+        description="The title of the song/track to get (case insensitive), use ASCII encoding for special characters",
     ),
     n: Optional[int] = Query(
         None, title="limit by n", description="Limit number of results to n results"
@@ -247,6 +355,23 @@ def get_songs_by_role(
     if not songs:
         raise HTTPException(
             status_code=404, detail=f"Songs with Role id '{role_id}' not found"
+        )
+    return {"Data": songs}
+
+
+@app.get("/songs/act/{act_num}", tags=["songs"])
+def get_songs_by_act(
+    act_num: int = Path(
+        ..., title="Act number", description="The number of the act to get"
+    ),
+    n: Optional[int] = Query(
+        None, title="limit by n", description="Limit number of results to n results"
+    ),
+):
+    songs = services.get_songs_by_act(act_num, n)
+    if not songs:
+        raise HTTPException(
+            status_code=404, detail=f"Songs with act number'{act_num}' not found"
         )
     return {"Data": songs}
 

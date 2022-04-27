@@ -1,9 +1,11 @@
 import peewee
 from peewee import fn
 from playhouse.shortcuts import model_to_dict
-from models import Cast, Role, Song, Musical_info
+from setup.models import Cast, Act, Role, Song, Musical_info
 from datetime import date
 from typing import Union
+import urllib.parse
+
 
 ################# Cast queries #################
 def add_cast(
@@ -41,6 +43,8 @@ def get_cast_by_id(cast_id: int) -> Union[dict, bool]:
 
 def get_cast_by_name(cast_name: str, limit: int) -> list:
     """returns castmember(s) matching name"""
+    cast_name = urllib.parse.unquote_plus(cast_name)
+
     if limit:
         query = Cast.select().where(Cast.full_name ** f"%{cast_name}%").limit(limit)
     else:
@@ -66,20 +70,63 @@ def get_random_cast(limit: int) -> list:
     return rand_member
 
 
+################# Act queries #################
+def add_act(num: int, plot: str) -> Union[int, bool]:
+    """adds an act to database"""
+    try:
+        new_act = Act.create(act_number=num, plot=plot)
+        return new_act.act_number
+    except peewee.PeeweeException:
+        return False
+
+
+def get_acts(limit: int) -> list:
+    """returns all acts"""
+    if limit:
+        query = Act.select().limit(limit)
+    else:
+        query = Act.select()
+    acts = [model_to_dict(act) for act in query]
+    return acts
+
+
+def get_act_by_id(act_id: int) -> Union[dict, bool]:
+    """returns an act by id"""
+    try:
+        act = Act.get_by_id(act_id)
+        return model_to_dict(act)
+    except peewee.DoesNotExist:
+        return False
+
+
 ################# Role queries #################
 def add_role(
-    full_name: str, birth_date: date, bio: str, photo_url: str, cast_id: int
+    full_name: str,
+    gender: str,
+    birth_date: date,
+    part_size: str,
+    bio: str,
+    photo_url: str,
+    act_nums: list,
+    cast_id: int,
 ) -> Union[int, bool]:
     """adds a role to database"""
     try:
         cast_member = Cast.get_by_id(cast_id)
+
         new_role = Role.create(
             full_name=full_name,
+            gender=gender,
             birth_date=birth_date,
+            part_size=part_size,
             bio=bio,
             photo_url=photo_url,
             cast_member=cast_member,
         )
+        new_role.save()
+
+        new_role.acts.add(Act.select().where(Act.act_number << act_nums))
+        new_role.save()
         return new_role.role_id
     except peewee.PeeweeException:
         return False
@@ -107,6 +154,8 @@ def get_role_by_id(role_id: int) -> Union[dict, bool]:
 
 def get_roles_by_name(role_name: str, limit: int) -> list:
     """returns role(s) matching name"""
+    role_name = urllib.parse.unquote_plus(role_name)
+
     if limit:
         query = Role.select().where(Role.full_name ** f"%{role_name}%").limit(limit)
     else:
@@ -126,10 +175,31 @@ def get_roles_by_cast(cast_id: int) -> list:
 def get_roles_by_song(song_id: int, limit: int) -> list:
     """returns role(s) by song"""
     if limit:
-        query = query = Song.get_by_id(song_id).singers.limit(limit)
+        query = Song.get_by_id(song_id).singers.limit(limit)
     else:
         query = Song.get_by_id(song_id).singers
 
+    roles = [model_to_dict(role) for role in query]
+    return roles
+
+
+def get_roles_by_act(act_id: int, limit: int) -> list:
+    """returns roles by act"""
+    if limit:
+        query = Act.get_by_id(act_id).roles.limit(limit)
+    else:
+        query = Act.get_by_id(act_id).roles
+
+    roles = [model_to_dict(role) for role in query]
+    return roles
+
+
+def get_roles_by_gender(gender: str, limit: int) -> list:
+    """returns roles by gender"""
+    if limit:
+        query = Role.select().where(Role.gender ** f"{gender}%").limit(limit)
+    else:
+        query = Role.select().where(Role.gender ** f"{gender}%")
     roles = [model_to_dict(role) for role in query]
     return roles
 
@@ -143,15 +213,12 @@ def get_random_role(limit: int) -> list:
 
 ################# Song queries #################
 def add_song(
-    title: str, lyrics: str, duration_in_seconds: int, role_ids: list
+    title: str, lyrics: str, duration: int, role_ids: list, act_num: int
 ) -> Union[int, bool]:
     """adds a song to database"""
     try:
-        new_song = Song.create(
-            title=title,
-            lyrics=lyrics,
-            duration_in_seconds=duration_in_seconds,
-        )
+        act = Act.get_by_id(act_num)
+        new_song = Song.create(title=title, lyrics=lyrics, duration=duration, act=act)
         new_song.save()
 
         new_song.singers.add(Role.select().where(Role.role_id << role_ids))
@@ -183,6 +250,8 @@ def get_song_by_id(song_id: int) -> Union[dict, bool]:
 
 def get_songs_by_title(song_title: str, limit: int) -> list:
     """returns songs(s) matching title"""
+    song_title = urllib.parse.unquote_plus(song_title)
+
     if limit:
         query = Song.select().where(Song.title ** f"%{song_title}%").limit(limit)
     else:
@@ -202,6 +271,17 @@ def get_songs_by_role(role_id: int, limit: int) -> list:
     return songs
 
 
+def get_songs_by_act(act_id: int, limit: int) -> list:
+    """returns songs by act"""
+    if limit:
+        query = Act.get_by_id(act_id).songs.limit(limit)
+    else:
+        query = Act.get_by_id(act_id).songs
+
+    songs = [model_to_dict(song) for song in query]
+    return songs
+
+
 def get_random_song(limit: int) -> list:
     """returns a random song"""
     song = Song.select().order_by(fn.Random()).limit(limit)
@@ -211,14 +291,21 @@ def get_random_song(limit: int) -> list:
 
 ################# Musical query #################
 def add_musical_info(
-    title: str, synopsis: str, release_year: date, poster_url: str
+    title: str,
+    synopsis: str,
+    category: str,
+    release_year: date,
+    genre: str,
+    poster_url: str,
 ) -> Union[Musical_info, bool]:
     """adds musical info to database"""
     try:
         return Musical_info.create(
             title=title,
             synopsis=synopsis,
+            category=category,
             release_year=release_year,
+            genre=genre,
             poster_url=poster_url,
         )
     except peewee.PeeweeException:
