@@ -33,57 +33,57 @@ https://youtu.be/pqT8HnUO_Q8
 
 
 #### Structure:
-Hamilton-api/
-├── __init__.py
-├── .gitignore
-├── api.py
-├── README.MD
-├── requirements.txt
-├── setup/
-│   ├── __init__.py
-│   ├── create_db.py
-│   ├── models.py
-│   └── services.py
-└── data/
-    ├── __init__.py
-    ├── acts.py
-    ├── cast.py
-    ├── musical_info.py
-    ├── roles.py
-    └── songs.py
+Hamilton-api/  
+├── __init__.py  
+├── .gitignore  
+├── api.py  
+├── README.MD  
+├── requirements.txt  
+├── setup/  
+│   ├── __init__.py  
+│   ├── create_db.py  
+│   ├── models.py  
+│   └── services.py  
+└── data/  
+    ├── __init__.py  
+    ├── acts.py  
+    ├── cast.py  
+    ├── musical_info.py  
+    ├── roles.py  
+    └── songs.py  
 
-__init__.py, setup/__init__.py, data/__init__.py:
+#### __init__.py, setup/__init__.py, data/__init__.py:
 this is a special file that tells the python interpreter to treat the directory it is in as a package. I mainly use it to be able to import modules and functions from files in different directories.
 
-.gitignore:
+#### .gitignore:
 this is another special file that tells git not to track any of the files/directories written inside of it
 
-api.py:
+#### api.py:
 contains the API endpoints, what optional queries are allowed, what information each path should return, and how to handle possible 404 exceptions. This is also the file from which the uvicorn server gets booted up.
 
-requirements.txt:
+#### requirements.txt:
 contains all the versioned packages needed to run this  application
 
-setup/create_db.py:
+#### setup/create_db.py:
 imports and combines all the data and helper functions from the different files in the data directory to create the database tables and populate them with the collected data
 
-setup/models.py:
+#### setup/models.py:
 specifies the models and table schemes for all the tables that can be found in the database
 
-setup/services.py:
+#### setup/services.py:
 using peewee ORM contains all the queries to insert and retrieve information from the database
 
-data/acts.py:
+#### data/acts.py:
 hardcoded information on the acts of the Hamilton musical
 
-data/cast.py:
+#### data/cast.py:
 hardcoded information on the cast of Hamilton musical
 
-data/musical_info.py:
+#### data/musical_info.py:
 contains general information such as the release year, poster, and synopsis of the hamilton musical
 
-data/roles.py:
+#### data/roles.py:
 contains data of all roles and characters that appear in the Hamilton musical
 
-data/songs.py:
+#### data/songs.py:
 contains information on all the songs that appear in the hamilton musical
